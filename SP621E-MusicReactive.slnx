@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SP621E.App/SP621E.App.csproj" />
+    <Project Path="src/SP621E.Audio/SP621E.Audio.csproj" />
+    <Project Path="src/SP621E.Bluetooth/SP621E.Bluetooth.csproj" />
+    <Project Path="src/SP621E.Core/SP621E.Core.csproj" />
+    <Project Path="src/SP621E.Screen/SP621E.Screen.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SP621E.Core.Tests/SP621E.Core.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/SnoopDecode/SnoopDecode.csproj" />
+    <Project Path="tools/VirtualSp621e/VirtualSp621e.csproj" />
+  </Folder>
+</Solution>

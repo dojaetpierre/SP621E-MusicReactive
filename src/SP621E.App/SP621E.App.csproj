@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SP621E.Audio\SP621E.Audio.csproj" />
+    <ProjectReference Include="..\SP621E.Bluetooth\SP621E.Bluetooth.csproj" />
+    <ProjectReference Include="..\SP621E.Core\SP621E.Core.csproj" />
+    <ProjectReference Include="..\SP621E.Screen\SP621E.Screen.csproj" />
+  </ItemGroup>
+
+</Project>

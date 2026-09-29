@@ -1,0 +1,323 @@
+﻿<Window x:Class="SP621E.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SP621E.App"
+        mc:Ignorable="d"
+        Title="SP621E Music-Reactive LED Controller"
+        Height="680" Width="1000"
+        MinHeight="520" MinWidth="760"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TabControl x:Name="ShellTabs" Grid.Row="0" Margin="8,8,8,4">
+            <!-- Connection -->
+            <TabItem Header="Connection">
+                <StackPanel Margin="16" MaxWidth="620" HorizontalAlignment="Left">
+                    <TextBlock Text="Bluetooth connection" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="Scan for the SP621E controller, then connect. Audio-reactive frames are sent over GATT as soon as a wire format is confirmed from HCI capture."
+                               Margin="0,4,0,12" Foreground="#666" TextWrapping="Wrap" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="BtnConnScan" Content="Scan for devices" Click="BtnConnScan_Click" Padding="14,8" Margin="0,0,8,0" />
+                        <Button x:Name="BtnConnStopScan" Content="Stop" IsEnabled="False" Click="BtnConnStopScan_Click" Padding="14,8" />
+                    </StackPanel>
+                    <TextBlock x:Name="ConnScanStatus" Text="No scan running." Margin="0,8,0,8" Foreground="#666" />
+
+                    <ListBox x:Name="ConnDeviceList" Height="180"
+                             SelectionChanged="ConnDeviceList_SelectionChanged"
+                             HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding Address, StringFormat='  {0}'}" Foreground="#777" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button x:Name="BtnConnect" Content="Connect to SP621E" IsEnabled="False" Click="BtnConnect_Click" Padding="14,8" Margin="0,0,8,0" />
+                        <Button x:Name="BtnDisconnect" Content="Disconnect" IsEnabled="False" Click="BtnDisconnect_Click" Padding="14,8" />
+                    </StackPanel>
+                    <TextBlock x:Name="ConnStatusNote" Text="" Margin="0,10,0,0" Foreground="#777" TextWrapping="Wrap" />
+
+                    <Border Background="#FBF6E9" BorderBrush="#E3D5A0" BorderThickness="1" CornerRadius="6" Margin="0,16,0,0" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="To unlock frame sending to the physical strip, two evidence steps are needed"
+                                       FontWeight="SemiBold" Margin="0,0,0,6" />
+                            <TextBlock TextWrapping="Wrap" Foreground="#555">
+                                <Run Text="1. Power the SP621E on near this PC, scan above, and connect once it appears (this confirms the exact controller name/address)." />
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#555" Margin="0,6,0,0">
+                                <Run Text="2. Advanced tab → select the strip → “Connect &amp; enumerate GATT services”. The report auto-saves — that is the controller’s service map (protocol step B1)." />
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Foreground="#555" Margin="0,6,0,0">
+                                <Run Text="3. On an Android phone: Developer Options → “Bluetooth HCI snoop logging” ON → drive the strip with the BanlanX app (change color/effect) → Advanced → “Import btsnoop capture…” the btsnoop_hci.log. Those bytes define the real wire format (step B2) and enable live frames." />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Audio Source -->
+            <TabItem Header="Audio Source">
+                <StackPanel Margin="16" MaxWidth="620" HorizontalAlignment="Left">
+                    <TextBlock Text="System audio input" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="Choose the output endpoint to listen to. The app captures what your speakers are already playing (loopback)."
+                               Margin="0,4,0,12" Foreground="#666" TextWrapping="Wrap" />
+
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox x:Name="AudioDeviceCombo" Width="360" HorizontalAlignment="Left"
+                                  DisplayMemberPath="FriendlyName"
+                                  SelectionChanged="AudioDeviceCombo_SelectionChanged" />
+                        <Button x:Name="BtnRefreshAudio" Content="Refresh" Click="BtnRefreshAudio_Click" Padding="14,6" Margin="8,0,0,0" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <Button x:Name="BtnStartAudio" Content="Start capture" IsEnabled="False" Click="BtnStartAudio_Click" Padding="14,8" Margin="0,0,8,0" />
+                        <Button x:Name="BtnStopAudio" Content="Stop capture" IsEnabled="False" Click="BtnStopAudio_Click" Padding="14,8" />
+                    </StackPanel>
+                    <TextBlock x:Name="AudioStatusText" Text="Click Refresh to list output endpoints." Margin="0,10,0,0" Foreground="#777" TextWrapping="Wrap" />
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Level" VerticalAlignment="Center" />
+                        <ProgressBar x:Name="RmsMeter" Grid.Row="0" Grid.Column="1" Height="16" Maximum="1.0" Value="0" />
+                        <TextBlock x:Name="RmsText" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Margin="0,0,4,0"
+                                   Foreground="#555" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Beats" VerticalAlignment="Center" Margin="0,8,0,0" />
+                        <TextBlock x:Name="BeatStatusText" Grid.Row="1" Grid.Column="1" FontWeight="Bold" Foreground="#777"
+                                   Margin="0,8,0,0" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Tempo" VerticalAlignment="Center" Margin="0,8,0,0" />
+                        <TextBlock x:Name="BpmText" Grid.Row="2" Grid.Column="1" Margin="0,8,0,0" VerticalAlignment="Center" />
+                    </Grid>
+                </StackPanel>
+            </TabItem>
+
+            <!-- Effects -->
+            <TabItem Header="Effects">
+                <Grid Margin="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="Music-reactive effects" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock x:Name="PixelsText" Text="" Margin="0,2,0,8" Foreground="#777" />
+
+                        <ComboBox x:Name="EffectCombo" Width="320" HorizontalAlignment="Left"
+                                  DisplayMemberPath="Name"
+                                  SelectionChanged="EffectCombo_SelectionChanged" />
+                        <TextBlock x:Name="EffectDescriptionText" Text="" Margin="0,6,0,10" Foreground="#666"
+                                   TextWrapping="Wrap" MaxWidth="340" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Intensity" Width="80" VerticalAlignment="Center" />
+                            <Slider x:Name="IntensitySlider" Width="220" Minimum="0" Maximum="2" Value="1"
+                                    TickFrequency="0.1" ValueChanged="IntensitySlider_ValueChanged" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Speed" Width="80" VerticalAlignment="Center" />
+                            <Slider x:Name="SpeedSlider" Width="220" Minimum="0.25" Maximum="4" Value="1"
+                                    TickFrequency="0.25" ValueChanged="SpeedSlider_ValueChanged" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="Brightness" Width="80" VerticalAlignment="Center" />
+                            <Slider x:Name="BrightnessSlider" Width="220" Minimum="0" Maximum="1" Value="1"
+                                    TickFrequency="0.05" ValueChanged="BrightnessSlider_ValueChanged" />
+                            <TextBlock x:Name="BrightnessValueText" Text="100%" Width="44" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" Foreground="#777" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button x:Name="BtnStartRender" Content="Start preview" Click="BtnStartRender_Click" Padding="14,8" Margin="0,0,8,0" />
+                            <Button x:Name="BtnStopRender" Content="Stop" IsEnabled="False" Click="BtnStopRender_Click" Padding="14,8" />
+                        </StackPanel>
+                        <TextBlock x:Name="RenderStatusText" Text="Start the audio capture, then start the preview." Foreground="#777" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <GroupBox Grid.Column="1" Header="LED preview">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="LedPreview">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Rectangle Width="11" Height="11" Margin="1" RadiusX="3" RadiusY="3" Fill="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <!-- Screen Sync -->
+            <TabItem Header="Screen Sync">
+                <Grid Margin="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="Screen color sync" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="Sample the monitor and drive the LEDs from what is shown on it, in addition to (or instead of) audio effects. The whole desktop is captured via GDI and downscaled to a 96-cell grid at ~20 fps."
+                                   Margin="0,4,0,12" Foreground="#666" TextWrapping="Wrap" />
+
+                        <CheckBox x:Name="ScreenEnableCheck" Content="Enable screen color sync" Margin="0,0,0,6"
+                                  Checked="ScreenEnableCheck_Checked" Unchecked="ScreenEnableCheck_Unchecked" />
+                        <TextBlock Text="Turning this on pauses the audio-effects preview; the shared LED preview then shows the screen colors and frames are sent to the strip (when connected)."
+                                   Margin="0,0,0,12" Foreground="#888" TextWrapping="Wrap" />
+
+                        <TextBlock Text="Capture region" FontWeight="SemiBold" Margin="0,8,0,4" />
+                        <ComboBox x:Name="ScreenModeCombo" Width="320" HorizontalAlignment="Left"
+                                  DisplayMemberPath="DisplayName"
+                                  SelectionChanged="ScreenModeCombo_SelectionChanged" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,8">
+                            <TextBlock Text="Smoothness" Width="80" VerticalAlignment="Center" />
+                            <Slider x:Name="ScreenSmoothSlider" Width="220" Minimum="0" Maximum="1" Value="0.5"
+                                    TickFrequency="0.05" ValueChanged="ScreenSmoothSlider_ValueChanged" />
+                            <TextBlock x:Name="ScreenSmoothValueText" Text="0.50" Width="36" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" Foreground="#777" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="Brightness" Width="80" VerticalAlignment="Center" />
+                            <Slider x:Name="ScreenBrightSlider" Width="220" Minimum="0" Maximum="1" Value="1"
+                                    TickFrequency="0.05" ValueChanged="ScreenBrightSlider_ValueChanged" />
+                            <TextBlock x:Name="ScreenBrightValueText" Text="100%" Width="36" Margin="8,0,0,0"
+                                       VerticalAlignment="Center" Foreground="#777" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="ScreenStatusText" Text="Screen sync is off." Foreground="#777" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <GroupBox Grid.Column="1" Header="Detected palette">
+                        <StackPanel>
+                            <TextBlock Text="Snapshot of the display colors currently feeding the LEDs (average + left-to-right zones)."
+                                       Margin="0,0,0,8" Foreground="#666" TextWrapping="Wrap" />
+                            <ItemsControl x:Name="ScreenPalettePreview">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Rectangle Width="52" Height="26" Margin="2" RadiusX="4" RadiusY="4" Fill="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock x:Name="ScreenAvgText" Text="" Margin="2,10,0,0" Foreground="#555" />
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+
+            <!-- Advanced / Debug -->
+            <TabItem Header="Advanced">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="Advanced / Debug" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock Text="Protocol forensics: scan for BLE devices, then enumerate the GATT services of the SP621E and save a report. UNVERIFIED until run against real hardware."
+                                   Margin="0,4,0,8" Foreground="#666" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="360" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="BtnScan" Content="Scan for BLE devices" Click="BtnScan_Click" Padding="12,6" Margin="0,0,8,0" />
+                                <Button x:Name="BtnStopScan" Content="Stop" IsEnabled="False" Click="BtnStopScan_Click" Padding="12,6" />
+                            </StackPanel>
+                            <TextBlock x:Name="ScanStatus" Text="No scan running." Margin="0,6,0,6" Foreground="#666" />
+                            <ListBox x:Name="DevicesList" Height="220" DisplayMemberPath="Name"
+                                     SelectionChanged="DevicesList_SelectionChanged"
+                                     HorizontalContentAlignment="Stretch" />
+                            <Button x:Name="BtnEnumerateGatt" Content="Connect &amp; enumerate GATT services" IsEnabled="False"
+                                    Click="BtnEnumerateGatt_Click" Padding="12,6" Margin="0,10,0,0" HorizontalAlignment="Left" />
+                            <Button x:Name="BtnImportSnoop" Content="Import btsnoop capture…" Margin="0,8,0,0"
+                                    Click="BtnImportSnoop_Click" Padding="12,6" HorizontalAlignment="Left" ToolTip="Decode an Android Bluetooth HCI snoop log (btsnoop_hci.log/.cfa) into ATT packets for protocol forensics." />
+                            <TextBlock Text="Select the SP621E in the list above, then enumerate. The report (services, characteristics, properties, MTU) is saved automatically."
+                                       Margin="0,10,0,0" Foreground="#666" TextWrapping="Wrap" />
+                            <TextBlock Text="Importing a BanlanX HCI capture decodes its ATT write/notify traffic here and saves it to the diagnostics folder — feed for the wire-format analysis (HARDWARE_PROTOCOL.md §5 Request #2)."
+                                       Margin="0,6,0,0" Foreground="#666" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <GroupBox Grid.Column="1" Header="GATT report">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBox x:Name="GattReportText" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas" FontSize="11"
+                                         Text="Run a scan, then select a device and enumerate its GATT services." />
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button x:Name="BtnSaveReport" Content="Save report" IsEnabled="False"
+                                            Click="BtnSaveReport_Click" Padding="12,6" />
+                                    <TextBlock x:Name="ReportPathText" Margin="12,4,0,0" Foreground="#888" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+
+                    <TextBlock Grid.Row="2" x:Name="DiagStatus" Text="" Margin="0,8,0,0" Foreground="#c0504d" TextWrapping="Wrap" />
+                </Grid>
+            </TabItem>
+
+            <!-- Application log -->
+            <TabItem Header="Log">
+                <TextBox x:Name="LogView" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                         FontFamily="Consolas" FontSize="11" Margin="8" />
+            </TabItem>
+        </TabControl>
+
+        <StatusBar Grid.Row="1">
+            <StatusBarItem>
+                <TextBlock x:Name="ConnectionStatusText" Text="Connection: Disconnected" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="PipelineStatusText" Text="Pipeline: Stopped" />
+            </StatusBarItem>
+            <Separator />
+            <StatusBarItem>
+                <TextBlock x:Name="VersionText" Text="v0.9.0 (core milestones)" />
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

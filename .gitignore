@@ -1,0 +1,12 @@
+bin/
+obj/
+dist/
+.vs/
+.vscode/
+*.user
+*.suo
+*.userprefs
+TestResults/
+artifacts/
+*.pdb
+*.nupkg
