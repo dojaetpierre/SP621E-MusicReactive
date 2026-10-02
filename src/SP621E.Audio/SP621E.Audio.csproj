@@ -14,4 +14,8 @@
     <PackageReference Include="NAudio.Wasapi" Version="3.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="SP621E.Core.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -140,6 +140,10 @@ public partial class MainWindow : Window
         _engine.Intensity = 1.0;
         _engine.Speed = 1.0;
 
+        RadioSourceInput.IsChecked = _settings.IsInputAudioSource;
+        if (!_settings.IsInputAudioSource)
+            RadioSourceLoopback.IsChecked = true;
+
         BrightnessSlider.Value = _engine.GlobalBrightness;
         IntensitySlider.Value = _engine.Intensity;
         SpeedSlider.Value = _engine.Speed;
@@ -178,6 +182,7 @@ public partial class MainWindow : Window
         _settings.ScreenSyncBrightness = ScreenBrightSlider.Value;
         if (AudioDeviceCombo.SelectedItem is AudioDeviceInfo device)
             _settings.LastAudioDeviceId = device.Id;
+        _settings.IsInputAudioSource = RadioSourceInput.IsChecked == true;
         if (_connSelected is not null)
         {
             _settings.LastDeviceName = _connSelected.Name;
@@ -556,17 +561,27 @@ public partial class MainWindow : Window
         RefreshAudioDevices();
     }
 
+    private void AudioSourceMode_Checked(object sender, RoutedEventArgs e)
+    {
+        if (RadioSourceInput is null || RadioSourceLoopback is null || AudioStatusText is null)
+            return;
+        RefreshAudioDevices();
+    }
+
     private void RefreshAudioDevices()
     {
         try
         {
-            _audioDevices = AudioDeviceEnumerator.GetRenderDevices();
+            var isInput = RadioSourceInput.IsChecked == true;
+            var status = isInput ? "Input endpoints" : "Output endpoints";
+            _audioDevices = isInput ? AudioDeviceEnumerator.GetCaptureDevices()
+                                    : AudioDeviceEnumerator.GetRenderDevices();
             AudioDeviceCombo.ItemsSource = _audioDevices;
-            AudioStatusText.Text = $"Output endpoints: {_audioDevices.Count}";
+            AudioStatusText.Text = $"{status}: {_audioDevices.Count}";
 
             if (_audioDevices.Count == 0)
             {
-                AudioStatusText.Text += " (none found; is an audio driver enabled?)";
+                AudioStatusText.Text += " (none found; is the input device enabled in Windows Sound settings?)";
             }
             else if (!string.IsNullOrEmpty(_settings.LastAudioDeviceId))
             {
@@ -574,7 +589,7 @@ public partial class MainWindow : Window
                 if (match is not null)
                     AudioDeviceCombo.SelectedItem = match;
             }
-            AppLog.Info($"Audio device refresh: {_audioDevices.Count} endpoints.");
+            AppLog.Info($"Audio device refresh ({status}): {_audioDevices.Count} endpoints.");
         }
         catch (Exception ex)
         {
@@ -600,7 +615,10 @@ public partial class MainWindow : Window
         try
         {
             StopAudioSource();
-            var source = new WasapiLoopbackAudioSource(device.Id, device.FriendlyName);
+            var isInput = RadioSourceInput.IsChecked == true;
+            IAudioSource source = isInput
+                ? new WasapiInputAudioSource(device.Id, device.FriendlyName)
+                : new WasapiLoopbackAudioSource(device.Id, device.FriendlyName);
             _audioSource = source;
             _analyzer = new AudioAnalyzer();
             _beatDetector = new BeatDetector();
@@ -609,13 +627,15 @@ public partial class MainWindow : Window
             source.Start();
 
             _settings.LastAudioDeviceId = device.Id;
+            _settings.IsInputAudioSource = isInput;
             SaveSettings();
 
+            var kind = isInput ? "input device" : "output (loopback)";
             AudioStatusText.Text =
-                $"Listening to: {device.FriendlyName}  ({source.SampleRate} Hz, {source.ChannelCount} ch)";
+                $"Listening to: {device.FriendlyName}  ({kind}, {source.SampleRate} Hz, {source.ChannelCount} ch)";
             BtnStartAudio.IsEnabled = false;
             BtnStopAudio.IsEnabled = true;
-            AppLog.Info($"Audio capture started on {device.FriendlyName}.");
+            AppLog.Info($"Audio capture started on {device.FriendlyName} ({kind}).");
         }
         catch (Exception ex)
         {

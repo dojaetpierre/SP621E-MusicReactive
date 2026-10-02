@@ -14,6 +14,9 @@ page: one exe, no runtime needed (~104 MB, includes the no-hardware simulator).
 - **Fully working today, no hardware required:** audio loopback capture, live level/beat/BPM meters,
   8 music-reactive effects with a 30 fps 50-LED preview, screen color sync, btsnoop HCI capture import,
   and the `VirtualSp621e` simulator that exercises the entire pipeline.
+- **TV-ready (v0.9.1):** the audio source can be either what this PC plays (loopback) **or any input
+  device** — microphone, line-in, or TV/console audio via a USB HDMI capture card — so the strip can
+  follow a TV that plays its own audio. Full wiring in [`TV-SETUP.md`](TV-SETUP.md).
 - **Physical strip:** live frame sending is deliberately gated on confirming the wire format from real
   hardware (the project never guesses protocol bytes). Two evidence files unlock it — the strip's GATT
   report plus a BanlanX HCI snoop log. See `HARDWARE_PROTOCOL.md` section 5 and the in-app checklist on

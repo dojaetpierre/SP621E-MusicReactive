@@ -14,6 +14,8 @@ public sealed class AppSettings
 
     public string? LastAudioDeviceId { get; set; }
 
+    public bool IsInputAudioSource { get; set; }
+
     public string? LastEffectName { get; set; }
 
     public double LastBrightness { get; set; } = 1.0;

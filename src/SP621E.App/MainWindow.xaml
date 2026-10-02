@@ -69,11 +69,18 @@
             <!-- Audio Source -->
             <TabItem Header="Audio Source">
                 <StackPanel Margin="16" MaxWidth="620" HorizontalAlignment="Left">
-                    <TextBlock Text="System audio input" FontSize="18" FontWeight="SemiBold" />
-                    <TextBlock Text="Choose the output endpoint to listen to. The app captures what your speakers are already playing (loopback)."
+                    <TextBlock Text="Audio source" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock Text="What should the LEDs react to? Loopback reacts to what THIS computer plays (music, YouTube, games on this PC). Input reacts to an audio input device — a microphone, line-in, or TV/console audio via an HDMI capture card — so the strip can follow your TV without this PC playing the sound."
                                Margin="0,4,0,12" Foreground="#666" TextWrapping="Wrap" />
 
                     <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="RadioSourceLoopback" GroupName="AudioSourceMode" Content="Computer sound (loopback)"
+                                     IsChecked="True" Checked="AudioSourceMode_Checked" VerticalAlignment="Center" />
+                        <RadioButton x:Name="RadioSourceInput" GroupName="AudioSourceMode" Content="Input device (mic / line-in / TV audio)"
+                                     Checked="AudioSourceMode_Checked" Margin="18,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                         <ComboBox x:Name="AudioDeviceCombo" Width="360" HorizontalAlignment="Left"
                                   DisplayMemberPath="FriendlyName"
                                   SelectionChanged="AudioDeviceCombo_SelectionChanged" />
@@ -84,7 +91,7 @@
                         <Button x:Name="BtnStartAudio" Content="Start capture" IsEnabled="False" Click="BtnStartAudio_Click" Padding="14,8" Margin="0,0,8,0" />
                         <Button x:Name="BtnStopAudio" Content="Stop capture" IsEnabled="False" Click="BtnStopAudio_Click" Padding="14,8" />
                     </StackPanel>
-                    <TextBlock x:Name="AudioStatusText" Text="Click Refresh to list output endpoints." Margin="0,10,0,0" Foreground="#777" TextWrapping="Wrap" />
+                    <TextBlock x:Name="AudioStatusText" Text="Click Refresh to list audio endpoints for the selected mode." Margin="0,10,0,0" Foreground="#777" TextWrapping="Wrap" />
 
                     <Grid Margin="0,14,0,0">
                         <Grid.ColumnDefinitions>

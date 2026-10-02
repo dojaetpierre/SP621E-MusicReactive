@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\SP621E.Core\SP621E.Core.csproj" />
+    <ProjectReference Include="..\..\src\SP621E.Audio\SP621E.Audio.csproj" />
     <ProjectReference Include="..\..\src\SP621E.Bluetooth\SP621E.Bluetooth.csproj" />
     <ProjectReference Include="..\..\src\SP621E.Screen\SP621E.Screen.csproj" />
   </ItemGroup>
